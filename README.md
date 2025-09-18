@@ -39,7 +39,7 @@ The TMC2209 driver wasn't readily available from the existing drivers, so I crea
 <img src="/Images/tmc2209.png" width="600">  
 </div>
 
-Using this symbol, I laid out the schematic based on the hardware assembly as mentioned above. The shcematic file is uploaded <a href="Munch_challenge/Munch_stepper_motor.kicad_sch"></a>
+Using this symbol, I laid out the schematic based on the hardware assembly as mentioned above. The shcematic file is uploaded <a href="Munch_challenge/Munch_stepper_motor.kicad_sch">here</a>
 
 **Schematic**
 

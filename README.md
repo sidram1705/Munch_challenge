@@ -29,6 +29,12 @@ After reviewing the datasheets of the motor driver and stm nucleo board, I noted
 
 A 100uF capacitor was added in series with the battery to act as a reservoir from the digital 12V and a 0.1uF was placed near the VS and GND pin to filter out high frequency noise. 
 
+**Circuit Assembly**:
+
+<div align=center>
+<img src="/Images/Circuit_Assembly.jpeg" width="600">  
+</div>
+
 ### 2. Schematic in KiCAD
 
 The TMC2209 driver wasn't readily available from the existing drivers, so I created a symbol for the <a href="Munch_challenge/tmc2209.kicad_sym">motor driver</a>. 
@@ -47,10 +53,56 @@ Using this symbol, I laid out the schematic based on the hardware assembly as me
 <img src="/Images/schematic.png" width="600">  
 </div>
 
-### 3.  Zephyr application
+### 3.  Working Code
 
-**Action Plan**:
+I wasn't able to setup the environment with zephyr to make the code run, so I tested it out first without zephyr using the STM32CubeIDE. The files that I ran the code on are linked in <a href="Munch_challenge/Inc">Inc</a> and <a href="Munch_challenge/Src">Src</a>. In order to make a working system for the stepper motor, I divided my file structure as follows:
 
-I want to make use of a binary semaphore hand over the functionality to the stepper motors 
+- **delay module**: provides accurate microsecond delays using a hardware timer (TIMx).
+- **stepper driver**: wraps STEP/DIR/EN control, angle→steps math, and motion primitives.
+- **main**: initializes the HAL, clock, GPIO, timer, delay module, and the stepper; then runs your demo motions.
 
-**Algorithm**:
+1. Delay:
+
+System: HSI = 16 MHz, APB2 prescaler = DIV1 ⇒ timer_clk = 16 MHz.
+TIM1 PSC = 215 (from your .ioc)
+
+> f_cnt = 16,000,000 / (215 + 1) ≈ 74,074.07 Hz
+> ticks = 500 × 74,074.07 / 1e6 ≈ 37.0 ticks  → wait until counter reaches ~37
+
+2. Stepper:
+
+- Init sets known-safe pin states and leaves the driver disabled by default.
+- Enable/Disable toggles the EN pin respecting polarity.
+- SetDir(dir) sets the DIR pin (driver samples DIR on the STEP edge; our delays are huge vs datasheet ns-scale constraints).
+- StepN(n) performs n STEP pulses:
+    - For each pulse:
+        - Drive STEP high → wait step_pulse_us
+        - Drive STEP low → wait step_space_us
+    - Overall step period (µs):
+    > T_step = step_pulse_us + step_space_us
+    - Step frequency (Hz):
+    > f_step = 1,000,000 / T_step
+
+- AngleToSteps(angle_deg) converts degrees to microsteps using rounding (prevents cumulative error):
+> steps = round( angle_deg × (full_steps_per_rev × microsteps) / 360 )
+
+With 200 FSR and 1/16:
+- 30° → 200×16×30/360 = 266.67 → 267 steps
+- 45° → 200×16×45/360 = 400.00 → 400 steps
+- 90° → 800 steps
+- 180° → 1600 steps
+
+- RotateAngle(angle_deg, dir) = set DIR → enable → StepN(AngleToSteps(...)) → disable.
+
+3. Main:
+
+    1. HAL & clocks: HAL_Init(), SystemClock_Config() (HSI 16 MHz in your project).
+    2. GPIO & TIM1 init: CubeMX-generated MX_GPIO_Init() and MX_TIM1_Init() set:
+        - STEP/DIR/EN as push-pull outputs.
+        - TIM1 with your PSC (e.g., 215) and an ARR big enough to cover delays.
+    3. Delay module: Delay_Init(&htim1, start=1)
+        - Reads the actual timer clock + PSC and computes f_cnt for correct µs timing.
+    4. Stepper config: Fill the StepperConfig with your pins, 200 steps/rev, 16 microsteps, and 500/500 µs pulse/space Initialize with an initial direction.
+    5. Demo loop: Repeatedly call RotateAngle with 30°, 45°, 90°, 180° clockwise, sleeping 1 s between moves.
+
+The working wideo can be viewed 

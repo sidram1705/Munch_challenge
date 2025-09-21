@@ -32,7 +32,7 @@ A 100uF capacitor was added in series with the battery to act as a reservoir fro
 **Circuit Assembly**:
 
 <div align=center>
-<img src="/Images/Circuit_Assembly.jpeg" width="600">  
+<img src="/Images/Circuit_assembly.jpeg" width="600">  
 </div>
 
 ### 2. Schematic in KiCAD
@@ -105,4 +105,4 @@ With 200 FSR and 1/16:
     4. Stepper config: Fill the StepperConfig with your pins, 200 steps/rev, 16 microsteps, and 500/500 µs pulse/space Initialize with an initial direction.
     5. Demo loop: Repeatedly call RotateAngle with 30°, 45°, 90°, 180° clockwise, sleeping 1 s between moves.
 
-The working wideo can be viewed 
+The working wideo can be viewed in <a href="/Images/Stepper_motor.mp4"></a>

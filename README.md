@@ -105,4 +105,4 @@ With 200 FSR and 1/16:
     4. Stepper config: Fill the StepperConfig with your pins, 200 steps/rev, 16 microsteps, and 500/500 µs pulse/space Initialize with an initial direction.
     5. Demo loop: Repeatedly call RotateAngle with 30°, 45°, 90°, 180° clockwise, sleeping 1 s between moves.
 
-The working wideo can be viewed in <a href="/Images/Stepper_motor.mp4"></a>
+The working wideo can be viewed in <a href="/Images/Stepper_motor.mp4">Stepper_motor.mp4</a>
